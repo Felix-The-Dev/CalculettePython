@@ -1,4 +1,6 @@
 import tkinter as tk
+import sys
+
 
 
 
@@ -9,7 +11,7 @@ class UltimateCalculator(tk.Tk):
         super().__init__() # Classe fenêtre Tkinter
 
         self.title("Calculatrice version Félix")
-        self.geometry("320x130") #320x120
+        self.geometry("1000x500") #320x120
         self.resizable(False, False) # Empêche le redimensionnement de la fenêtre
         self.configure(bg="white")
 
@@ -45,16 +47,16 @@ class UltimateCalculator(tk.Tk):
             for j in range(len(self.buttons_contents[i])):
 
                 if self.buttons_contents[i][j] == "C": #cas particulier du C
-                    numberButton = tk.Button(self, text=self.buttons_contents[i][j], command = self.clearExpression)
+                    numberButton = tk.Button(self, text=self.buttons_contents[i][j], width=15, height=5, command = self.clearExpression)
                     numberButton.grid(row=i,column=j)
 
                 elif self.buttons_contents[i][j] == "=": #cas particulier du =
-                    numberButton = tk.Button(self, text=self.buttons_contents[i][j], command = lambda: self.setResult(self.getExpression()))
+                    numberButton = tk.Button(self, text=self.buttons_contents[i][j], width=15, height=5, command = lambda: self.setResult(self.getExpression()))
                     numberButton.grid(row=i,column=1)
 
                 else:
                     
-                    numberButton = tk.Button(self, text=self.buttons_contents[i][j], command = lambda text=self.buttons_contents[i][j]: self.addToExpression(text))
+                    numberButton = tk.Button(self, text=self.buttons_contents[i][j], width=15, height=5, command = lambda text=self.buttons_contents[i][j]: self.addToExpression(text))
                     numberButton.grid(row=i,column=j)
 
 
@@ -68,9 +70,10 @@ class UltimateCalculator(tk.Tk):
 
     def getExpression(self):
         """Récupérer l'expression entrée'"""
-        print("Expression :", self.expressionStringVar.get().removeprefix("Expression entrée: "), end="")
-        return self.expressionStringVar.get().removeprefix("Expression entrée: ")
-
+    
+        print("Expression :", self.expressionStringVar.get()[len("Expression entrée: "):], end="")
+        return self.expressionStringVar.get()[len("Expression entrée: "):]
+    
 
     def addToExpression(self, text):
         """Ajouter un caractère à l'expression"""
