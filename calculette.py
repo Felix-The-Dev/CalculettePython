@@ -191,7 +191,7 @@ class UltimateCalculator(tk.Tk):
                 buttons_contents = [
                     ["(", ")", "√", "**"],
                     ["1", "2", "3", "+"],
-                    ["4", "5", "6", "-"],
+                    ["4", "5", "6", "-"],++
                     ["7", "8", "9", "*", "C"],
                     [".", "0", "⌫", "/", "="]
                 ]
@@ -316,6 +316,9 @@ class UltimateCalculator(tk.Tk):
             
         elif event.keysym == "Return":
             self.calculate(self.getExpression())
+        
+        elif event.keysym == "BackSpace":
+            self.clearExpression(1)
 
          
         
