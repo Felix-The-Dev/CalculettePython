@@ -144,11 +144,11 @@ class UltimateCalculator(tk.Tk):
                     
                     
            
-    def changeMode(self, mode):
+    def changeMode(self, mode, switch_second=False):
         
         self.mode = mode
         
-        if mode in ["standard", "scientifique", "expert"]:
+        if mode in ["standard", "scientifique", "scientifique2nd", "expert", "expert2nd"]:
             # On détruit tout les boutons déjà présent dans la frame des boutons
             for widget in self.buttonsFrame.winfo_children():
                 widget.destroy()
@@ -159,6 +159,7 @@ class UltimateCalculator(tk.Tk):
             
             if mode == "standard":
                 self.headerStringVar.set("Calculette")
+                self.mode = "standard"
                      
                 # Liste des boutons par lignes
                 buttons_contents = [
@@ -173,28 +174,57 @@ class UltimateCalculator(tk.Tk):
             elif mode == "scientifique":
                 self.headerStringVar.set("Calculatrice scientifique")
                 
-                # Liste des boutons par lignes
-                buttons_contents = [
-                    ["(", ")", "√", "**"],
-                    ["1", "2", "3", "+"],
-                    ["4", "5", "6", "-"],
-                    ["7", "8", "9", "*", "C"],
-                    [".", "0", "⌫", "/", "="]
-                ]
+                if not switch_second or self.second :
+                    self.second = False
+                
+                    # Liste des boutons par lignes
+                    buttons_contents = [
+                        ["2nd", "(", ")", "√", "**"],
+                        ["π", "1", "2", "3", "/"],
+                        ["sin", "4", "5", "6", "*"],
+                        ["cos", "7", "8", "9", "-", "C"],
+                        ["tan", ".", "0", "⌫", "+", "="]
+                    ]
+                else:
+                    self.second = True
+
+                    # Liste des boutons par lignes
+                    buttons_contents = [
+                        ["2nd", "(", ")", "3√", "x10^x"],
+                        ["π", "1", "2", "3", "//"],
+                        ["asin", "4", "5", "6", "mod"],
+                        ["acos", "7", "8", "9", "-", "C"],
+                        ["atan", ".", "0", "⌫", "+", "="]
+                    ]
                 buttons_size = 1
                 
                 
             elif mode == "expert":
                 self.headerStringVar.set("Calculatrice experte")
+                self.mode = "expert"
+
+                if not switch_second or self.second :
+                    self.second = False
                 
-                # Liste des boutons par lignes
-                buttons_contents = [
-                    ["(", ")", "√", "**"],
-                    ["1", "2", "3", "+"],
-                    ["4", "5", "6", "-"],++
-                    ["7", "8", "9", "*", "C"],
-                    [".", "0", "⌫", "/", "="]
-                ]
+                    # Liste des boutons par lignes
+                    buttons_contents = [
+                        ["2nd",   "log",    "%", "(", ")", "√", "**"],
+                        ["φ",     "x!" ,    "π", "1", "2", "3", "/"],
+                        ["dec", "asin", "sin", "4", "5", "6", "*"],
+                        ["bin", "acos", "cos", "7", "8", "9", "-", "C"],
+                        ["hex", "atan", "tan", ".", "0", "⌫", "+", "="]
+                    ]
+                else:
+                    self.second = True
+                    
+                    # Liste des boutons par lignes
+                    buttons_contents = [
+                        ["2nd",   "log",    "%", "(", ")", "√", "**"],
+                        ["φ",     "x!" ,    "π", "1", "2", "3", "//"],
+                        ["dec", "asin", "sin", "4", "5", "6", "mod"],
+                        ["bin", "acos", "cos", "7", "8", "9", "-", "C"],
+                        ["hex", "atan", "tan", ".", "0", "⌫", "+", "="]
+                    ]
                 buttons_size = 1
                 
                 
@@ -213,17 +243,30 @@ class UltimateCalculator(tk.Tk):
                         command = lambda text=buttons_contents[i][j]: self.addToExpression(text)
                     )
                     
+                    # --- Cas particuliers de boutons aux commandes ou couleurs spécifiques
+                    if buttons_contents[i][j].isdigit(): #les boutons de chiffres sont plus sombres
+                        numberButton.config(bg="#dddddd")
                     
-                    # --- Cas particuliers de boutons aux commandes spécifiques
-                    if buttons_contents[i][j] == "⌫": #cas particulier du C qui efface un chiffre
-                        numberButton.config(command=lambda: self.clearExpression(1))
+                    elif buttons_contents[i][j] == "2nd": #le bouton 2nd est violet
+                        numberButton.config(bg="#e0ddff")
+                        if self.second:
+                            numberButton.config(relief="sunken")
+                        numberButton.config(command=lambda: self.changeMode(self.mode, True))
+                        
 
-                    if buttons_contents[i][j] == "C": #cas particulier du C qui efface tout  
+                    
+                    elif buttons_contents[i][j] == "⌫": #cas particulier du C qui efface un chiffre
+                        numberButton.config(command=lambda: self.clearExpression(1))
+                        numberButton.config(bg="#ffe7e7")
+
+                    elif buttons_contents[i][j] == "C": #cas particulier du C qui efface tout  
                         numberButton.config(command=self.clearExpression)
+                        numberButton.config(bg="#e7f0ff")
 
                     
                     elif buttons_contents[i][j] == "=": #cas particulier du = pour valider
                         numberButton.config(command=lambda: self.calculate(self.getExpression()))
+                        numberButton.config(bg="#e7ffe7")
         
 
                     numberButton.grid(row=i,column=j)
@@ -319,7 +362,9 @@ class UltimateCalculator(tk.Tk):
         
         elif event.keysym == "BackSpace":
             self.clearExpression(1)
-
+            
+            
+            
          
         
     def open(self):
