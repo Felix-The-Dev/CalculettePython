@@ -1,9 +1,7 @@
 import tkinter as tk
 import tkinter.font as tkFont
-from PIL import Image, ImageTk
 
-
-import sys
+import math
 
 
 
@@ -23,10 +21,21 @@ class UltimateCalculator(tk.Tk):
         
         self.mainFont = tkFont.Font(family="Arial", size=22, weight="normal", slant="roman")
         
-        self.expressionsHistory = ""
+        self.realExpression = []
+        self.displayedExpression = []
+        
+        self.displayedExpressionsHistory = []
+        self.realExpressionsHistory = []
         self.resultsHistory = ""
+        
+        self.waitingParenthesisNum = 0
+        self.waitingBlock = False
+        self.endAfterBlock = ")"
+        
         self.historyDisplayed = 8
         self.mode = "standard"
+        self.seconde = False
+        self.degrad= "deg"
 
         self.init_widgets()
         
@@ -52,24 +61,7 @@ class UltimateCalculator(tk.Tk):
         
         
         
-        # ----- Création du header -----
-        
-        
-        # # Label du header
-        # self.headerLabel = tk.Label(
-        #     self.headerFrame, 
-        #     textvariable=self.headerStringVar, 
-        #     font=self.mainFont, 
-        #     anchor="w",
-        #     fg="black", bg ="white"
-        # )
-        
-        
-        # Bouton du Header
-        # image = Image.open("assets/menu_icon.webp") 
-        # image = image.resize((50, 50), Image.LANCZOS)
-        # photo = ImageTk.PhotoImage(image)
-        
+        # ----- Création du header -----        
         self.headerStringVar = tk.StringVar()
         self.headerStringVar.set("Calculette")
         
@@ -79,6 +71,7 @@ class UltimateCalculator(tk.Tk):
             font=self.mainFont, 
             anchor="w",
             fg="black", bg ="white",
+            cursor="hand2",
             relief=tk.RAISED
         )
         
@@ -100,7 +93,7 @@ class UltimateCalculator(tk.Tk):
         
         # Label de l'expression entrée
         self.expressionStringVar = tk.StringVar()
-        self.expressionStringVar.set(">   ")
+        self.expressionStringVar.set(">  ")
         self.expressionLabel = tk.Label(
             self.expressionFrame, 
             textvariable=self.expressionStringVar, 
@@ -142,9 +135,8 @@ class UltimateCalculator(tk.Tk):
         
         self.changeMode("standard")
                     
-                    
-           
-    def changeMode(self, mode, switch_second=False):
+        
+    def changeMode(self, mode, switch_second=False, switch_degrad=False):
         
         self.mode = mode
         
@@ -154,6 +146,7 @@ class UltimateCalculator(tk.Tk):
                 widget.destroy()
             
             buttons_size = 5
+            buttons_padding = 1
             
             
             
@@ -169,6 +162,7 @@ class UltimateCalculator(tk.Tk):
                     [".", "0", "⌫", "/", "="]
                 ]
                 buttons_size = 2
+                buttons_padding = 0
                 
                 
             elif mode == "scientifique":
@@ -179,7 +173,7 @@ class UltimateCalculator(tk.Tk):
                 
                     # Liste des boutons par lignes
                     buttons_contents = [
-                        ["2nd", "(", ")", "√", "**"],
+                        ["2nd", "(", ")", "√", "**", "deg"],
                         ["π", "1", "2", "3", "/"],
                         ["sin", "4", "5", "6", "*"],
                         ["cos", "7", "8", "9", "-", "C"],
@@ -190,13 +184,14 @@ class UltimateCalculator(tk.Tk):
 
                     # Liste des boutons par lignes
                     buttons_contents = [
-                        ["2nd", "(", ")", "3√", "x10^x"],
+                        ["2nd", "(", ")", "³√", "x10ˣ", "deg"],
                         ["π", "1", "2", "3", "//"],
                         ["asin", "4", "5", "6", "mod"],
-                        ["acos", "7", "8", "9", "-", "C"],
+                        ["acos", "7", "8", "9", "%", "C"],
                         ["atan", ".", "0", "⌫", "+", "="]
                     ]
                 buttons_size = 1
+                buttons_padding = 5.5
                 
                 
             elif mode == "expert":
@@ -208,7 +203,7 @@ class UltimateCalculator(tk.Tk):
                 
                     # Liste des boutons par lignes
                     buttons_contents = [
-                        ["2nd",   "log",    "%", "(", ")", "√", "**"],
+                        ["2nd",   "log",    "%", "(", ")", "√", "**", "deg"],
                         ["φ",     "x!" ,    "π", "1", "2", "3", "/"],
                         ["dec", "asin", "sin", "4", "5", "6", "*"],
                         ["bin", "acos", "cos", "7", "8", "9", "-", "C"],
@@ -219,16 +214,22 @@ class UltimateCalculator(tk.Tk):
                     
                     # Liste des boutons par lignes
                     buttons_contents = [
-                        ["2nd",   "log",    "%", "(", ")", "√", "**"],
+                        ["2nd",   "log",    "%", "(", ")", "³√", "x10ˣ", "deg"],
                         ["φ",     "x!" ,    "π", "1", "2", "3", "//"],
                         ["dec", "asin", "sin", "4", "5", "6", "mod"],
                         ["bin", "acos", "cos", "7", "8", "9", "-", "C"],
                         ["hex", "atan", "tan", ".", "0", "⌫", "+", "="]
                     ]
                 buttons_size = 1
+                buttons_padding = 1.75
                 
                 
-                
+            if switch_degrad:
+                if self.degrad == "rad":
+                    self.degrad = "deg"
+                    
+                elif self.degrad == "deg":
+                    self.degrad = "rad"
                 
                 
                 
@@ -240,33 +241,79 @@ class UltimateCalculator(tk.Tk):
                         text=buttons_contents[i][j], 
                         font=self.mainFont, 
                         width=buttons_size*3, height=buttons_size,
+                        padx=buttons_padding*3, pady=buttons_padding,
+                        cursor="hand2",
                         command = lambda text=buttons_contents[i][j]: self.addToExpression(text)
                     )
                     
-                    # --- Cas particuliers de boutons aux commandes ou couleurs spécifiques
+                    # --- Cas particuliers de boutons aux commandes ou couleurs spécifiques ----
+                    
+                    
                     if buttons_contents[i][j].isdigit(): #les boutons de chiffres sont plus sombres
                         numberButton.config(bg="#dddddd")
                     
                     elif buttons_contents[i][j] == "2nd": #le bouton 2nd est violet
-                        numberButton.config(bg="#e0ddff")
+                        numberButton.config(bg="#ddddff")
                         if self.second:
                             numberButton.config(relief="sunken")
                         numberButton.config(command=lambda: self.changeMode(self.mode, True))
-                        
-
                     
-                    elif buttons_contents[i][j] == "⌫": #cas particulier du C qui efface un chiffre
+                    
+                    elif buttons_contents[i][j] == "deg": #le bouton deg/rad est violet
+                        if self.degrad == "deg":
+                            numberButton.config(bg="#fff5dd")
+                            numberButton.config(command=lambda: self.changeMode(self.mode, False, True))
+                            
+                        elif self.degrad == "rad":
+                            numberButton.config(bg="#fff0aa")
+                            numberButton.config(relief="sunken")
+                            numberButton.config(text="rad")
+                            numberButton.config(command=lambda: self.changeMode(self.mode, False, True))
+                        
+                    
+                    elif buttons_contents[i][j] == "⌫": #cas particulier du ⌫ qui efface un chiffre
                         numberButton.config(command=lambda: self.clearExpression(1))
-                        numberButton.config(bg="#ffe7e7")
+                        numberButton.config(bg="#ffdddd")
 
                     elif buttons_contents[i][j] == "C": #cas particulier du C qui efface tout  
                         numberButton.config(command=self.clearExpression)
-                        numberButton.config(bg="#e7f0ff")
+                        numberButton.config(bg="#ddeeff")
 
                     
                     elif buttons_contents[i][j] == "=": #cas particulier du = pour valider
-                        numberButton.config(command=lambda: self.calculate(self.getExpression()))
-                        numberButton.config(bg="#e7ffe7")
+                        numberButton.config(command=lambda: self.calculate())
+                        numberButton.config(bg="#ddffdd")
+                        
+                    elif buttons_contents[i][j] == "π": # pi
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "math.pi"))
+                        
+                    elif buttons_contents[i][j] == "φ": # phi
+                        numberButton.config(command=lambda  text=buttons_contents[i][j]: self.addToExpression(text, "(1 + math.sqrt(5)) / 2"))
+                    
+                    
+                    elif buttons_contents[i][j] in ["sin", "cos", "tan", "asin", "acos", "atan"]: # trigo
+                        if self.degrad == "deg":
+                            numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "math.degrees(math."+text+"(math.radians(", ")))"))
+                        
+                        elif self.degrad == "rad":
+                            numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "math."+text+"(", ")"))
+
+
+                    elif buttons_contents[i][j] in ["√"]: # racine carrée
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "math.sqrt(", ")"))
+                    
+                    # binaire, hexa et décimal
+                    elif buttons_contents[i][j] == "bin": 
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "bin(", ").replace('0b',"")"))
+                    
+                    elif buttons_contents[i][j] == "hex": 
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "hex(", ").replace('0x',"").upper()"))
+                
+                    elif buttons_contents[i][j] == "dec": 
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "int('", "', 2)"))
+                    
+                    
+                    
         
 
                     numberButton.grid(row=i,column=j)
@@ -278,37 +325,81 @@ class UltimateCalculator(tk.Tk):
     def clearExpression(self, n=-1):
         """Clear la zone de l'expression"""
         if n <= 0:
-            self.expressionStringVar.set("> ")
+            self.realExpression.clear()
+            self.displayedExpression.clear()
+            self.expressionStringVar.set(">  ")
             
-        elif len(self.expressionStringVar.get())>2:
-            self.expressionStringVar.set(self.expressionStringVar.get()[:-n])
+        elif len(self.displayedExpression)>0:
+            # on enlève n caractères
+            if self.realExpression[-1].isdigit(): 
+                self.realExpression[-1] = self.realExpression[-1][:-1]
+                self.displayedExpression[-1] = self.displayedExpression[-1][:-1]
+            else:
+                self.realExpression = self.realExpression[:-n]
+                self.displayedExpression = self.displayedExpression[:-1]
+                
+            self.expressionStringVar.set(">  " + "".join(self.displayedExpression))
 
 
-    def getExpression(self):
-        """Récupérer l'expression entrée'"""
-    
-        print("Expression :", self.expressionStringVar.get()[len("> "):], end="")
-        return self.expressionStringVar.get()[len("> "):]
-    
 
-    def addToExpression(self, text):
+    def addToExpression(self, text, realtext=None, endOfBlock=None):
         """Ajouter un caractère à l'expression"""
+        if realtext==None:
+            realtext = text
         
-        print(len(self.expressionStringVar.get()[2:]))
-        if len(self.expressionStringVar.get()[2:]) == 0 and text in ["+", "-", "*", "/", "%"]:
-            self.expressionStringVar.set(self.expressionStringVar.get()+'\n'.join(self.resultsHistory.splitlines()[-1:])+text)
+            
+        if len(self.realExpression) != 0 and text.isdigit() or text=="." and self.realExpression[len(self.realExpression) - 1].isdigit():  # si c'est un chiffre qui fait partie d'un nombre
+            self.realExpression[len(self.realExpression) - 1] += text
+            self.displayedExpression[len(self.displayedExpression) - 1] += text
+            
+        else :
 
-        else:
-            self.expressionStringVar.set(self.expressionStringVar.get()+text)
+            if text == "(":  # si c'est une parenthèse ouvrante
+                if self.waitingBlock:
+                    self.waitingBlock = False
+                    self.waitingParenthesisNum += 1
+                
+            elif text == ")":  # si c'est une parenthèse fermante
+                if self.waitingParenthesisNum > 0:
+                    self.waitingParenthesisNum -= 1
+                    realtext = ")"+self.endAfterBlock
+                
+            elif text.isdigit() or text in ["π", "φ"] :  # si il forme un nombre
+                if self.waitingBlock:
+                    self.waitingBlock = False
+                    realtext += self.endAfterBlock
+            
+            else: # si c'est un caractère d'opération
+                if endOfBlock != None:
+                    self.waitingBlock = True
+                    self.endAfterBlock = endOfBlock
+                    
+            
+            
+            if len(self.realExpression) == 0 and realtext in ["+", "-", "*", "/", "//", "%"]:  #Si on met un caractère d'opération sans rien derrière, on prend le dernier résultat
+                print("Dernier résulat : ", self.resultsHistory.splitlines()[-1])
+                self.realExpression.append(self.resultsHistory.splitlines()[-1] + realtext )
+                self.displayedExpression.append(self.resultsHistory.splitlines()[-1]+text )
+                
+            else:
+                self.displayedExpression.append(text)
+                self.realExpression.append(realtext)
+                                
+            
+        print(self.waitingBlock)
+        self.expressionStringVar.set(">  " + "".join(self.displayedExpression))
     
-    
-    def calculate(self, expression):
+    def calculate(self):
         """Calcule l'expression"""
+        
+        print("Expression :", "".join(self.realExpression), end="")
 
+        expression_str = "".join(self.realExpression)
+        
         # Calcul du résultat
         result = ""
         try:
-            result = str(eval(expression))
+            result = str(eval(expression_str))
             print(" = ", result)
             
         except Exception:
@@ -316,12 +407,18 @@ class UltimateCalculator(tk.Tk):
             print(" = ", "error")
         
         # Enregistrement du résultat
-        self.expressionsHistory += "\n"+str(expression)
+        self.displayedExpressionsHistory.append(self.displayedExpression.copy())
+        self.realExpressionsHistory.append(self.realExpression.copy())
+        
         self.resultsHistory += "\n"+str(result)
         
             
-        # On affiche seulement les 3 dernières lignes de l'historique
-        self.lastExpressionsStringVar.set('\n'.join(self.expressionsHistory.splitlines()[-self.historyDisplayed:]))
+        # On affiche seulement les n dernières lignes de l'historique
+        entire_expression_history_str = ""
+        for expression in self.displayedExpressionsHistory[-self.historyDisplayed:]:
+            entire_expression_history_str += "".join(expression) + "\n"
+            
+        self.lastExpressionsStringVar.set(entire_expression_history_str[:-1])
         self.lastResultsStringVar.set('\n'.join(self.resultsHistory.splitlines()[-self.historyDisplayed:]))
         
         self.clearExpression()
@@ -334,7 +431,7 @@ class UltimateCalculator(tk.Tk):
             self.addToExpression(event.keysym)
             
 
-        elif event.keysym in ["plus", "minus", "asterisk", "slash", "period", "comma", "percent"]:
+        elif event.keysym in ["plus", "minus", "asterisk", "slash", "period", "comma", "parenleft", "parenright"]:
             # caractères de calcul
             symbol_map = {
                 "plus": "+",
@@ -342,23 +439,31 @@ class UltimateCalculator(tk.Tk):
                 "asterisk": "*",
                 "period": ".",
                 "comma": ".",
-                "percent": "%"
-            }
-            self.addToExpression(symbol_map[event.keysym])
-        
-        elif event.keysym in ["Up", "Left", "parenleft", "parenright"]:
-            # caractères de calcul autres
-            symbol_map = {
                 "parenleft": "(",
                 "parenright": ")",
+            }
+            self.addToExpression(symbol_map[event.keysym][0], )
+        
+        elif event.keysym in ["percent", "s", "c", "t", "!"]:
+            # caractères de calcul dont l'affichage sur la calculette n'est pas le même que selon python le reconnais
+            symbol_map = {
+                "percent": ("%", "%")
+            }
+            
+            self.addToExpression(symbol_map[event.keysym][0], symbol_map[event.keysym][1])
+            
+        
+        elif event.keysym in ["Up", "Left"]:
+            # flèches
+            symbol_map = {
                 "Up": '\n'.join(self.resultsHistory.splitlines()[-1:]),
-                "Left": '\n'.join(self.expressionsHistory.splitlines()[-1:])
+                "Left": '\n' + "".join(self.expressionsHistory[-1])
             }
             
             self.addToExpression(symbol_map[event.keysym])
             
         elif event.keysym == "Return":
-            self.calculate(self.getExpression())
+            self.calculate()
         
         elif event.keysym == "BackSpace":
             self.clearExpression(1)
