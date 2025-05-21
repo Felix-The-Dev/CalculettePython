@@ -147,6 +147,7 @@ class UltimateCalculator(tk.Tk):
                     
         
     def changeMode(self, mode, switch_second=False, switch_degrad=False):
+        """Permet de changer le mode de la calculette (standard, scientifique, expert), d'activer le bouton 2nd et de passer de gradient en degrès"""
         
         self.mode = mode
         
@@ -384,6 +385,7 @@ class UltimateCalculator(tk.Tk):
 
     def addToExpression(self, text, realtext=None, endOfBlock=None):
         """Ajouter un caractère à l'expression"""
+
         if realtext==None:
             realtext = text
         
@@ -512,6 +514,7 @@ class UltimateCalculator(tk.Tk):
         
         
     def onKeyPress(self, event):
+        """"Méthode qui gère les entrées au clavier"""
         # On vérifie si la touche pressée est un chiffre
         if event.keysym.isdigit():
             
@@ -562,10 +565,12 @@ class UltimateCalculator(tk.Tk):
         """Ouvre la fenêtre de la calculette"""
         self.mainloop()
         
-# Initialisation
-calculette = UltimateCalculator()
-# Ouverture de la calculette
-calculette.open()
+
+if __name__ == "__main__":
+    # Initialisation
+    calculette = UltimateCalculator()
+    # Ouverture de la calculette
+    calculette.open()
 
 
  
