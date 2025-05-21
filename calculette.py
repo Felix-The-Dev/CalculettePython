@@ -3,7 +3,17 @@ import tkinter.font as tkFont
 
 import math
 
+def bin_convert(number:int) -> str:
+    return bin(number).replace('0b','')
 
+def hex_convert(number:int) -> str:
+    return hex(number).replace('0x','').upper()
+
+def dec_convert(number:str) -> int:
+    return int(number, 2)
+
+def cubiq_root(number:int):
+    return number**(1/3)
 
 
 class UltimateCalculator(tk.Tk):
@@ -14,7 +24,7 @@ class UltimateCalculator(tk.Tk):
 
         self.title("Calculatrice version Félix")
         self.geometry("550x700") #320x120
-        self.resizable(False, False) # Empêche le redimensionnement de la fenêtre
+        # self.resizable(False, False) # Empêche le redimensionnement de la fenêtre
         self.configure(bg="white")
         self.iconbitmap('assets/logo.ico')
         self.grid_columnconfigure(0, weight=1)
@@ -187,7 +197,7 @@ class UltimateCalculator(tk.Tk):
                         ["2nd", "(", ")", "³√", "x10ˣ", "deg"],
                         ["π", "1", "2", "3", "//"],
                         ["asin", "4", "5", "6", "mod"],
-                        ["acos", "7", "8", "9", "%", "C"],
+                        ["acos", "7", "8", "9", "%", "C-h"],
                         ["atan", ".", "0", "⌫", "+", "="]
                     ]
                 buttons_size = 1
@@ -204,7 +214,7 @@ class UltimateCalculator(tk.Tk):
                     # Liste des boutons par lignes
                     buttons_contents = [
                         ["2nd",   "log",    "%", "(", ")", "√", "**", "deg"],
-                        ["φ",     "x!" ,    "π", "1", "2", "3", "/"],
+                        ["φ",     "e" ,    "π", "1", "2", "3", "/"],
                         ["dec", "asin", "sin", "4", "5", "6", "*"],
                         ["bin", "acos", "cos", "7", "8", "9", "-", "C"],
                         ["hex", "atan", "tan", ".", "0", "⌫", "+", "="]
@@ -215,9 +225,9 @@ class UltimateCalculator(tk.Tk):
                     # Liste des boutons par lignes
                     buttons_contents = [
                         ["2nd",   "log",    "%", "(", ")", "³√", "x10ˣ", "deg"],
-                        ["φ",     "x!" ,    "π", "1", "2", "3", "//"],
+                        ["φ",     "e" ,    "π", "1", "2", "3", "//"],
                         ["dec", "asin", "sin", "4", "5", "6", "mod"],
-                        ["bin", "acos", "cos", "7", "8", "9", "-", "C"],
+                        ["bin", "acos", "cos", "7", "8", "9", "-", "C-h"],
                         ["hex", "atan", "tan", ".", "0", "⌫", "+", "="]
                     ]
                 buttons_size = 1
@@ -278,6 +288,10 @@ class UltimateCalculator(tk.Tk):
                     elif buttons_contents[i][j] == "C": #cas particulier du C qui efface tout  
                         numberButton.config(command=self.clearExpression)
                         numberButton.config(bg="#ddeeff")
+                        
+                    elif buttons_contents[i][j] == "C-h": #cas particulier du C-h (clear historique obtenu en faisant 2nd + C) qui efface tout,même l'historique  
+                        numberButton.config(command=lambda : self.clearExpression(clear_historique=True))
+                        numberButton.config(bg="#9fbeff")
 
                     
                     elif buttons_contents[i][j] == "=": #cas particulier du = pour valider
@@ -289,6 +303,9 @@ class UltimateCalculator(tk.Tk):
                         
                     elif buttons_contents[i][j] == "φ": # phi
                         numberButton.config(command=lambda  text=buttons_contents[i][j]: self.addToExpression(text, "(1 + math.sqrt(5)) / 2"))
+                    
+                    elif buttons_contents[i][j] == "e": # exponentiel
+                        numberButton.config(command=lambda  text=buttons_contents[i][j]: self.addToExpression(text, "math.e"))
                     
                     
                     elif buttons_contents[i][j] in ["sin", "cos", "tan", "asin", "acos", "atan"]: # trigo
@@ -302,15 +319,30 @@ class UltimateCalculator(tk.Tk):
                     elif buttons_contents[i][j] in ["√"]: # racine carrée
                         numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "math.sqrt(", ")"))
                     
+                    elif buttons_contents[i][j] in ["³√"]: # racine cubique
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "cubiq_root(", ")"))
+                    elif buttons_contents[i][j] in ["%"]: # pourcentage
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "*0.01*"))
+                    
+                    elif buttons_contents[i][j] in ["mod"]: # modulo
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "%"))
+
+                    elif buttons_contents[i][j] in ["x10ˣ"]: # puissance de 10
+                        numberButton.config(command=lambda: self.addToExpression("*10**", "*10**"))
+
+                    
+                    elif buttons_contents[i][j] in ["log"]: # logarythme
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "math.log(", ")"))
+                    
                     # binaire, hexa et décimal
                     elif buttons_contents[i][j] == "bin": 
-                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "bin(", ").replace('0b',"")"))
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "bin_convert(", ")"))
                     
                     elif buttons_contents[i][j] == "hex": 
-                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "hex(", ").replace('0x',"").upper()"))
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "hex_convert(", ")"))
                 
                     elif buttons_contents[i][j] == "dec": 
-                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "int('", "', 2)"))
+                        numberButton.config(command=lambda text=buttons_contents[i][j]: self.addToExpression(text, "dec_convert('", "')"))
                     
                     
                     
@@ -322,7 +354,7 @@ class UltimateCalculator(tk.Tk):
             raise(Exception("Incorrect mode"))
 
     
-    def clearExpression(self, n=-1):
+    def clearExpression(self, n=-1, clear_historique=False):
         """Clear la zone de l'expression"""
         if n <= 0:
             self.realExpression.clear()
@@ -339,6 +371,14 @@ class UltimateCalculator(tk.Tk):
                 self.displayedExpression = self.displayedExpression[:-1]
                 
             self.expressionStringVar.set(">  " + "".join(self.displayedExpression))
+            
+            
+        if clear_historique:
+            self.displayedExpressionsHistory.clear()
+            self.resultsHistory = ""
+            
+            self.lastExpressionsStringVar.set("")
+            self.lastResultsStringVar.set("")
 
 
 
@@ -347,50 +387,95 @@ class UltimateCalculator(tk.Tk):
         if realtext==None:
             realtext = text
         
-            
-        if len(self.realExpression) != 0 and text.isdigit() or text=="." and self.realExpression[len(self.realExpression) - 1].isdigit():  # si c'est un chiffre qui fait partie d'un nombre
-            self.realExpression[len(self.realExpression) - 1] += text
-            self.displayedExpression[len(self.displayedExpression) - 1] += text
-            
-        else :
-
-            if text == "(":  # si c'est une parenthèse ouvrante
-                if self.waitingBlock:
-                    self.waitingBlock = False
-                    self.waitingParenthesisNum += 1
-                
-            elif text == ")":  # si c'est une parenthèse fermante
-                if self.waitingParenthesisNum > 0:
-                    self.waitingParenthesisNum -= 1
-                    realtext = ")"+self.endAfterBlock
-                
-            elif text.isdigit() or text in ["π", "φ"] :  # si il forme un nombre
-                if self.waitingBlock:
-                    self.waitingBlock = False
-                    realtext += self.endAfterBlock
-            
-            else: # si c'est un caractère d'opération
-                if endOfBlock != None:
-                    self.waitingBlock = True
-                    self.endAfterBlock = endOfBlock
-                    
-            
-            
-            if len(self.realExpression) == 0 and realtext in ["+", "-", "*", "/", "//", "%"]:  #Si on met un caractère d'opération sans rien derrière, on prend le dernier résultat
+        # Si l'expression est pour l'instant vide
+        if len(self.realExpression) == 0 :    
+            if realtext in ["+", "-", "*", "*0.01*", "/", "//", "%"]:
+                #Si on met un caractère d'opération sans rien derrière, on prend le dernier résultat
                 print("Dernier résulat : ", self.resultsHistory.splitlines()[-1])
                 self.realExpression.append(self.resultsHistory.splitlines()[-1] + realtext )
                 self.displayedExpression.append(self.resultsHistory.splitlines()[-1]+text )
-                
             else:
+                if endOfBlock != None: # si la fonction de l'opération nécessite une fermeture de parenthèse
+                    self.waitingBlock = True
+                    self.endAfterBlock = endOfBlock
+                
                 self.displayedExpression.append(text)
                 self.realExpression.append(realtext)
+                
+            
+        else :
+            # Si c'est un chiffre qui fait partie d'un nombre
+            if (text.isdigit() or text==".") and self.realExpression[-1].replace(")", "").replace("'", "").replace(".", "").isdigit(): 
+
+                if self.realExpression[-1].count(')') > 0:
+                    
+                    end_parenthesis_num = 0
+                    
+                    for char in self.realExpression[-1][::-1]:
+                        if char != ")" and  char != "'":
+                            break
+                        else:
+                            end_parenthesis_num+=1
+                                            
+                    
+                    self.realExpression[-1] =  self.realExpression[-1][:-end_parenthesis_num] + text + self.realExpression[-1][-end_parenthesis_num:]
+                    self.displayedExpression[-1] = self.displayedExpression[-1] + text
+                
+                # Sinon, on place juste le chiffre avec le précédent pour ne former qu'un seul nombre-élément dans la liste de l'expression
+                else :
+                    self.realExpression[-1] += text
+                    self.displayedExpression[-1] += text
+            
+            else:
+                 
+                # Si il forme un nombre à lui tout seul
+                if text.isdigit() or text in ["π", "φ", "e"] :  
+                    if self.waitingBlock:
+                        self.waitingBlock = False
+                        realtext += self.endAfterBlock
+                        
+                    if self.realExpression[-1].isdigit() or self.realExpression[-1] in ["π", "φ", "e"]:
+                        realtext = "*"+realtext    
+                
+                # Si c'est une parenthèse ouvrante
+                elif text == "(":                          
+                    if self.waitingBlock:
+                        self.waitingBlock = False
+                        self.waitingParenthesisNum += 1
+                
+                # Si c'est une parenthèse fermante
+                elif text == ")":                          
+                    if self.waitingParenthesisNum > 0:
+                        self.waitingParenthesisNum -= 1
+                        realtext = ")"+self.endAfterBlock
+                
+                
+                #Ssi c'est un caractère d'opération
+                else: 
+                    if endOfBlock != None:
+                        self.waitingBlock = True
+                        self.endAfterBlock = endOfBlock
+                            
+                            
+                self.displayedExpression.append(text)
+                self.realExpression.append(realtext)
+                    
+            
+        
+            
                                 
             
-        print(self.waitingBlock)
+        # print(self.waitingBlock)
+        print(self.displayedExpression)
+        print(self.realExpression)
+        print("\n")
         self.expressionStringVar.set(">  " + "".join(self.displayedExpression))
     
     def calculate(self):
         """Calcule l'expression"""
+
+        if len(self.realExpression) == 0:
+            return False
         
         print("Expression :", "".join(self.realExpression), end="")
 
@@ -410,15 +495,17 @@ class UltimateCalculator(tk.Tk):
         self.displayedExpressionsHistory.append(self.displayedExpression.copy())
         self.realExpressionsHistory.append(self.realExpression.copy())
         
-        self.resultsHistory += "\n"+str(result)
+        if self.resultsHistory != "":
+            self.resultsHistory += "\n"
+        self.resultsHistory+=str(result)
         
-            
+        
         # On affiche seulement les n dernières lignes de l'historique
         entire_expression_history_str = ""
         for expression in self.displayedExpressionsHistory[-self.historyDisplayed:]:
             entire_expression_history_str += "".join(expression) + "\n"
             
-        self.lastExpressionsStringVar.set(entire_expression_history_str[:-1])
+        self.lastExpressionsStringVar.set(entire_expression_history_str[0:-1])
         self.lastResultsStringVar.set('\n'.join(self.resultsHistory.splitlines()[-self.historyDisplayed:]))
         
         self.clearExpression()
@@ -455,12 +542,11 @@ class UltimateCalculator(tk.Tk):
         
         elif event.keysym in ["Up", "Left"]:
             # flèches
-            symbol_map = {
-                "Up": '\n'.join(self.resultsHistory.splitlines()[-1:]),
-                "Left": '\n' + "".join(self.expressionsHistory[-1])
-            }
+            if event.keysym == "Up" :
+                self.addToExpression( '\n'.join(self.resultsHistory.splitlines()[-1:]))
+            elif event.keysym == "Left":
+                self.addToExpression("".join(self.displayedExpressionsHistory[-1]), "".join(self.realExpressionsHistory[-1]))
             
-            self.addToExpression(symbol_map[event.keysym])
             
         elif event.keysym == "Return":
             self.calculate()
